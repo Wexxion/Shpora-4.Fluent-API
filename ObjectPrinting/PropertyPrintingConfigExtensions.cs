@@ -6,20 +6,18 @@ namespace ObjectPrinting
 	{
 		public static PrintingConfig<TOwner> TrimmedToLength<TOwner>
             (this PropertyPrintingConfig<TOwner, string> config, int maxLen)
-		{
-		    var propConfig = config as IPropertyPrintingConfig<TOwner, string>;
-		    var parentConfig = propConfig.Parent as IPrintingConfig;
-		    parentConfig.TrimmingLenth.Add(propConfig.SelectedProperty, maxLen);
-		    return (PrintingConfig<TOwner>) parentConfig;
+        { 
+            var parentConfig = config.ParentConfig;
+		    parentConfig.TrimmingLength.Add(config.SelectedProperty, maxLen);
+		    return parentConfig;
         }
 
 	    private static PrintingConfig<TOwner> SetCultureForType<TOwner, TPropType>
 	        (PropertyPrintingConfig<TOwner, TPropType> config, CultureInfo culture)
 	    {
-	        var propConfig = config as IPropertyPrintingConfig<TOwner, TPropType>;
-	        var parentConfig = propConfig.Parent as IPrintingConfig;
+	        var parentConfig = config.ParentConfig;
             parentConfig.NumericCulture.Add(typeof(TPropType), culture);
-            return (PrintingConfig<TOwner>) parentConfig;
+            return parentConfig;
         }
 
         public static PrintingConfig<TOwner> Using<TOwner>
