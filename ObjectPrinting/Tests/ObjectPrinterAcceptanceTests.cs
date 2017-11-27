@@ -8,19 +8,19 @@ namespace ObjectPrinting.Tests
     [TestFixture]
     public class ObjectPrinterAcceptanceTests
     {
+        private readonly Person testPerson = new Person
+        {
+            Name = "Alexander", Age = 19, Height = 200, Weight = 120.1231f,
+            Father = new Person
+            {
+                Name = "Danny", Age = 42, Height = 181.9d, Weight = 75.123f,
+                Mother = new Person { Name = "Anna", Age = 96, Height = 156}
+            }
+        };
+
         [Test]
         public void Demo()
         {
-            var testPerson = new Person
-            {
-                Name = "Alexander", Age = 19, Height = 200, Weight = 120.1231f,
-                Father = new Person
-                {
-                    Name = "Danny", Age = 42, Height = 181.9d, Weight = 75.123f,
-                    Mother = new Person { Name = "Anna", Age = 96, Height = 156}
-                }
-            };
-
             var printer = ObjectPrinter.For<Person>()
                 //1. Исключить из сериализации свойства определенного типа
                 .Excluding<Guid>()
@@ -116,5 +116,55 @@ namespace ObjectPrinting.Tests
             result.Contains(person.Name).Should().BeFalse();
             person.PrintToString().Contains(person.Name).Should().BeTrue();
         }
+
+        [Test]
+        public void ApprovalTestForTestPerson()
+        {
+            var printer = ObjectPrinter.For<Person>()
+                .Excluding<Guid>()
+                .Printing<int>().Using(i => i.ToString("X"))
+                .Printing<double>().Using(CultureInfo.CreateSpecificCulture("de-DE"))
+                .Printing<float>().Using(CultureInfo.InvariantCulture)
+                .Printing(p => p.Age).Using(age => $"{age} years old")
+                .Printing(p => p.Name).TrimmedToLength(4);
+
+            var result = printer.PrintToString(testPerson);
+
+            result.Should().Be("Person\r\n" +
+                               "	Name = Alex\r\n" +
+                               "	Height = 200\r\n" +
+                               "	Weight = 120.1231\r\n" +
+                               "	Age = 19 years old\r\n" +
+                               "	Father = Person\r\n" +
+                               "		Name = Dann\r\n" +
+                               "		Height = 181,9\r\n" +
+                               "		Weight = 75.123\r\n" +
+                               "		Age = 42 years old\r\n" +
+                               "		Father = null\r\n" +
+                               "		Mother = Person\r\n" +
+                               "			Name = Anna\r\n" +
+                               "			Height = 156\r\n" +
+                               "			Weight = 0\r\n" +
+                               "			Age = 96 years old\r\n" +
+                               "			Father = null\r\n" +
+                               "			Mother = null\r\n" +
+                               "	Mother = null\r\n");
+        }
+
+        [Test]
+        public void ApprovalTestForPerson()
+        {
+            var printer = ObjectPrinter.For<Person>();
+            var result = printer.PrintToString(person);
+            result.Should().Be("Person\r\n" +
+                               "	Id = Guid\r\n" +
+                               "	Name = Alexander\r\n" +
+                               "	Height = 200\r\n" +
+                               "	Weight = 120,123\r\n" +
+                               "	Age = 19\r\n" +
+                               "	Father = null\r\n" +
+                               "	Mother = null\r\n");
+        }
     }
+
 }
