@@ -11,7 +11,7 @@ namespace ObjectPrinting.Tests
         [Test]
         public void Demo()
         {
-            var person = new Person
+            var testPerson = new Person
             {
                 Name = "Alexander", Age = 19, Height = 200, Weight = 120.1231f,
                 Father = new Person
@@ -36,13 +36,13 @@ namespace ObjectPrinting.Tests
                 //6. Исключить из сериализации конкретного свойства
                 
 
-            var s1 = printer.PrintToString(person);
+            var s1 = printer.PrintToString(testPerson);
 
             //7. Синтаксический сахар в виде метода расширения, сериализующего по-умолчанию
-            person.PrintToString();
+            testPerson.PrintToString();
 
             //8. ...с конфигурированием
-            person.PrintToString(s => s.Excluding(p => p.Age));
+            testPerson.PrintToString(s => s.Excluding(p => p.Age));
             Console.WriteLine(s1);
         }
 

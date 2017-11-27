@@ -8,7 +8,7 @@ namespace ObjectPrinting
             (this PropertyPrintingConfig<TOwner, string> config, int maxLen)
         { 
             var parentConfig = config.ParentConfig;
-		    parentConfig.TrimmingLength.Add(config.SelectedProperty, maxLen);
+		    parentConfig.AddTrimmingLength(config.SelectedProperty, maxLen);
 		    return parentConfig;
         }
 
@@ -16,7 +16,7 @@ namespace ObjectPrinting
 	        (PropertyPrintingConfig<TOwner, TPropType> config, CultureInfo culture)
 	    {
 	        var parentConfig = config.ParentConfig;
-            parentConfig.NumericCulture.Add(typeof(TPropType), culture);
+            parentConfig.AddNumericCulture(typeof(TPropType), culture);
             return parentConfig;
         }
 

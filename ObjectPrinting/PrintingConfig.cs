@@ -5,13 +5,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace ObjectPrinting
 {
     public class PrintingConfig<TOwner>
     {
-        private readonly string newLine = Environment.NewLine;
         // ReSharper disable once StaticMemberInGenericType
         private static readonly Type[] FinalTypes =
         {
@@ -19,39 +17,41 @@ namespace ObjectPrinting
             typeof(DateTime), typeof(TimeSpan)
         };
 
+        private readonly Dictionary<PropertyInfo, Func<object, string>> customPropertySerialization;
+
+        private readonly Dictionary<Type, Func<object, string>> customTypeSerialization;
+
+        private readonly List<PropertyInfo> excludingProprties;
+
+        private readonly List<Type> excludingTypes;
+
+        private readonly string newLine = Environment.NewLine;
+
+        private readonly Dictionary<Type, CultureInfo> numericCulture;
+
+        private readonly Dictionary<PropertyInfo, int> trimmingLength;
+
         public PrintingConfig()
         {
-            ExcludingTypes = new List<Type>();
-            ExcludingProprties = new List<PropertyInfo>();
-            TrimmingLength = new Dictionary<PropertyInfo, int>();
-            CustomTypeSerialization = new Dictionary<Type, Func<object, string>>();
-            NumericCulture = new Dictionary<Type, CultureInfo>();
-            CustomPropertySerialization = new Dictionary<PropertyInfo, Func<object, string>>();
+            excludingTypes = new List<Type>();
+            excludingProprties = new List<PropertyInfo>();
+            trimmingLength = new Dictionary<PropertyInfo, int>();
+            customTypeSerialization = new Dictionary<Type, Func<object, string>>();
+            numericCulture = new Dictionary<Type, CultureInfo>();
+            customPropertySerialization = new Dictionary<PropertyInfo, Func<object, string>>();
         }
 
-        internal Dictionary<PropertyInfo, Func<object, string>> CustomPropertySerialization { get; }
-
-        internal Dictionary<Type, Func<object, string>> CustomTypeSerialization { get; }
-
-        internal List<Type> ExcludingTypes { get; }
-
-        internal List<PropertyInfo> ExcludingProprties { get; }
-
-        internal Dictionary<Type, CultureInfo> NumericCulture { get; }
-
-        internal Dictionary<PropertyInfo, int> TrimmingLength { get; }
- 
 
         public PrintingConfig<TOwner> Excluding<TPropType>()
         {
-            ExcludingTypes.Add(typeof(TPropType));
+            excludingTypes.Add(typeof(TPropType));
             return this;
         }
 
         public PrintingConfig<TOwner> Excluding<TPropType>(Expression<Func<TOwner, TPropType>> memberSelector)
         {
             var propInfo = (PropertyInfo) ((MemberExpression) memberSelector.Body).Member;
-            ExcludingProprties.Add(propInfo);
+            excludingProprties.Add(propInfo);
             return this;
         }
 
@@ -66,6 +66,18 @@ namespace ObjectPrinting
         }
 
         public string PrintToString(TOwner obj) => PrintToString(obj, 0);
+
+        internal void AddCustomPropertySerialization(PropertyInfo property, Func<object, string> printRule) 
+            => customPropertySerialization.Add(property, printRule);
+
+        internal void AddCustomTypeSerialization(Type type, Func<object, string> printRule) 
+            => customTypeSerialization.Add(type, printRule);
+
+        internal void AddNumericCulture(Type type, CultureInfo culture) 
+            => numericCulture.Add(type, culture);
+
+        internal void AddTrimmingLength(PropertyInfo property, int maxLen) 
+            => trimmingLength.Add(property, maxLen);
 
         private string PrintToString(object obj, int nestingLevel)
         {
@@ -85,7 +97,7 @@ namespace ObjectPrinting
 
             var identation = new string('\t', nestingLevel + 1);
             var sb = new StringBuilder();
-            
+
             sb.AppendLine(type.Name);
             foreach (var propertyInfo in type.GetProperties())
             {
@@ -97,18 +109,20 @@ namespace ObjectPrinting
             }
             return sb.ToString();
         }
+
         private string TryTrimPropertyValue(PropertyInfo property, string propertyValue)
         {
-            if (!TrimmingLength.ContainsKey(property)) return propertyValue;
-            return TrimmingLength[property] < propertyValue.Length ?
-                propertyValue.Substring(0, TrimmingLength[property]) + newLine : propertyValue;
+            if (!trimmingLength.ContainsKey(property)) return propertyValue;
+            return trimmingLength[property] < propertyValue.Length
+                ? propertyValue.Substring(0, trimmingLength[property]) + newLine
+                : propertyValue;
         }
 
         private bool TryConvertPropertyWithCustomParams(object obj, PropertyInfo property, out string result)
         {
             result = null;
-            if (!CustomPropertySerialization.ContainsKey(property)) return false;
-            result = CustomPropertySerialization[property](property.GetValue(obj)) + newLine;
+            if (!customPropertySerialization.ContainsKey(property)) return false;
+            result = customPropertySerialization[property](property.GetValue(obj)) + newLine;
             return true;
         }
 
@@ -123,7 +137,7 @@ namespace ObjectPrinting
         private bool TryCovertNumericWithCulture(object obj, Type type, out string result)
         {
             result = null;
-            if (!NumericCulture.ContainsKey(type)) return false;
+            if (!numericCulture.ContainsKey(type)) return false;
             result = ConverNumeric(obj, type) + newLine;
             return true;
         }
@@ -131,22 +145,22 @@ namespace ObjectPrinting
         private bool TryConvertTypeWithCustomParams(object obj, Type type, out string result)
         {
             result = null;
-            if (!CustomTypeSerialization.ContainsKey(type)) return false;
-            result = CustomTypeSerialization[type](obj) + newLine;
+            if (!customTypeSerialization.ContainsKey(type)) return false;
+            result = customTypeSerialization[type](obj) + newLine;
             return true;
         }
 
         private string ConverNumeric(object obj, Type type)
         {
             if (obj is IFormattable formattableObj)
-                return formattableObj.ToString(null, NumericCulture[type]);
+                return formattableObj.ToString(null, numericCulture[type]);
             throw new InvalidCastException("Only IFormattable types supported");
         }
 
         private bool IgnoreProperty(PropertyInfo propertyInfo)
         {
-            return ExcludingTypes.Contains(propertyInfo.PropertyType)
-                   || ExcludingProprties.Contains(propertyInfo);
+            return excludingTypes.Contains(propertyInfo.PropertyType)
+                   || excludingProprties.Contains(propertyInfo);
         }
     }
 }

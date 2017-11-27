@@ -24,11 +24,9 @@ namespace ObjectPrinting
         public PrintingConfig<TOwner> Using(Func<TPropType, string> printRule)
         {
             if (SelectedType != null)
-                ParentConfig.CustomTypeSerialization
-                    .Add(typeof(TPropType), obj => printRule((TPropType) obj));
+                ParentConfig.AddCustomTypeSerialization(typeof(TPropType), obj => printRule((TPropType) obj));
             else
-                ParentConfig.CustomPropertySerialization
-                    .Add(SelectedProperty, obj => printRule((TPropType) obj));
+                ParentConfig.AddCustomPropertySerialization(SelectedProperty, obj => printRule((TPropType) obj));
             return ParentConfig;
         }
     }
