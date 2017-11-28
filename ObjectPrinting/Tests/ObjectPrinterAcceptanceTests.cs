@@ -130,25 +130,25 @@ namespace ObjectPrinting.Tests
 
             var result = printer.PrintToString(testPerson);
 
-            result.Should().Be("Person\r\n" +
-                               "	Name = Alex\r\n" +
-                               "	Height = 200\r\n" +
-                               "	Weight = 120.1231\r\n" +
-                               "	Age = 19 years old\r\n" +
-                               "	Father = Person\r\n" +
-                               "		Name = Dann\r\n" +
-                               "		Height = 181,9\r\n" +
-                               "		Weight = 75.123\r\n" +
-                               "		Age = 42 years old\r\n" +
-                               "		Father = null\r\n" +
-                               "		Mother = Person\r\n" +
-                               "			Name = Anna\r\n" +
-                               "			Height = 156\r\n" +
-                               "			Weight = 0\r\n" +
-                               "			Age = 96 years old\r\n" +
-                               "			Father = null\r\n" +
-                               "			Mother = null\r\n" +
-                               "	Mother = null\r\n");
+            result.Should().Be(string.Join("", "Person\r\n",
+                                               "	Name = Alex\r\n",
+                                               "	Height = 200\r\n",
+                                               "	Weight = 120.1231\r\n",
+                                               "	Age = 19 years old\r\n",
+                                               "	Father = Person\r\n",
+                                               "		Name = Dann\r\n",
+                                               "		Height = 181,9\r\n",
+                                               "		Weight = 75.123\r\n",
+                                               "		Age = 42 years old\r\n",
+                                               "		Father = null\r\n",
+                                               "		Mother = Person\r\n",
+                                               "			Name = Anna\r\n",
+                                               "			Height = 156\r\n",
+                                               "			Weight = 0\r\n",
+                                               "			Age = 96 years old\r\n",
+                                               "			Father = null\r\n",
+                                               "			Mother = null\r\n",
+                                               "	Mother = null\r\n"));
         }
 
         [Test]
@@ -156,14 +156,14 @@ namespace ObjectPrinting.Tests
         {
             var printer = ObjectPrinter.For<Person>();
             var result = printer.PrintToString(person);
-            result.Should().Be("Person\r\n" +
-                               "	Id = Guid\r\n" +
-                               "	Name = Alexander\r\n" +
-                               "	Height = 200\r\n" +
-                               "	Weight = 120,123\r\n" +
-                               "	Age = 19\r\n" +
-                               "	Father = null\r\n" +
-                               "	Mother = null\r\n");
+            result.Should().Be(string.Join("", "Person\r\n",
+                                               "	Id = Guid\r\n",
+                                               "	Name = Alexander\r\n",
+                                               "	Height = 200\r\n",
+                                               "	Weight = 120,123\r\n",
+                                               "	Age = 19\r\n",
+                                               "	Father = null\r\n",
+                                               "	Mother = null\r\n"));
         }
     }
 
